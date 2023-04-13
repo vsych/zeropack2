@@ -1,6 +1,7 @@
 path                = require 'path'
 HtmlWebpackPlugin   = require 'html-webpack-plugin'
 TerserPlugin        = require 'terser-webpack-plugin'
+Webpack             = require 'webpack'
 
 babel =
   loader: 'babel-loader'
@@ -29,6 +30,7 @@ file = loader: 'file-loader'
 module.exports = (builderCmd, builderEnv, builderDir) ->
   mode = builderCmd == 'serve' && 'development' || 'production'
   prjPath = path.resolve(builderDir)
+  envPath = path.join(prjPath, ".app.data.#{builderEnv}.json")
 
   builderConfig = require path.join(prjPath, 'zeropack.config.coffee')
 
@@ -96,9 +98,13 @@ module.exports = (builderCmd, builderEnv, builderDir) ->
       '.js'
       '.cjsx'
     ]
-  plugins: [ new HtmlWebpackPlugin(
-    template: path.join(prjPath, 'src', 'index.html')
-    templateParameters: ENV: require(path.join(prjPath, ".app.data.#{builderEnv}.json"))) ]
+  plugins: [
+    new HtmlWebpackPlugin(
+      template: path.join(prjPath, 'src', 'index.html')
+      templateParameters: ENV: require(envPath)
+    ),
+    new Webpack.ProvidePlugin(ENV: envPath)
+  ]
   optimization:
     minimize: mode == 'production'
     minimizer: [ new TerserPlugin ]
