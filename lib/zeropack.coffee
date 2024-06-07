@@ -2,15 +2,9 @@ Webpack = require 'webpack'
 WebpackDevServer = require 'webpack-dev-server'
 Config = require './webpack.config.coffee'
 
-console.log """
-\u001b[33m
-  ███████ ███████ ██████   ██████  ██████   █████   ██████ ██   ██ 
-     ███  ██      ██   ██ ██    ██ ██   ██ ██   ██ ██      ██  ██  
-    ███   █████   ██████  ██    ██ ██████  ███████ ██      █████   
-   ███    ██      ██   ██ ██    ██ ██      ██   ██ ██      ██  ██  
-  ███████ ███████ ██   ██  ██████  ██      ██   ██  ██████ ██   ██  v#{require("../package.json").version}
-\u001b[0m
-"""
+yellowText = (text) -> "\u001b[33m#{text}\u001b[0m"
+
+console.log yellowText "ZeroPack v#{require("../package.json").version}"
 
 builderCmd = process.argv[2]
 builderEnv = process.env['BUILDER_ENV'] || 'development'

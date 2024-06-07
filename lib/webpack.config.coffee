@@ -29,6 +29,8 @@ file = loader: 'file-loader'
 
 module.exports = (builderCmd, builderEnv, builderDir) ->
   mode = builderCmd == 'serve' && 'development' || 'production'
+  if process.env.NODE_ENV == 'production'
+    mode = 'production'
   prjPath = path.resolve(builderDir)
   envPath = path.join(prjPath, ".app.data.#{builderEnv}.json")
 
