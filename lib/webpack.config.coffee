@@ -46,11 +46,11 @@ module.exports = (builderCmd, builderEnv, builderDir) ->
     publicPath: builderConfig.publicPath || '/'
   cache: type: 'filesystem'
   devServer: {
-    overlay: mode != 'production'
-    static: path.join(prjPath, 'public')
-    open: true
+    static: path.join(prjPath, 'public'),
+    open: true,
     client: {
-      progress: true
+      progress: true,
+      overlay: mode != 'production'
     },
     ...builderConfig.devServer
   }
