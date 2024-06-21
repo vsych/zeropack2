@@ -46,8 +46,9 @@ module.exports = (builderCmd, builderEnv, builderDir) ->
     publicPath: builderConfig.publicPath || '/'
   cache: type: 'filesystem'
   devServer: {
-    static: path.join(prjPath, 'public'),
-    open: true,
+    overlay: mode != 'production'
+    static: path.join(prjPath, 'public')
+    open: true
     client: {
       progress: true
     },
