@@ -21,6 +21,7 @@
     "coffee-loader": "^5.0.0",
     "coffeescript": "^2.7.0",
     "css-loader": "^6.11.0",
+    "express": "^5.1.0",
     "file-loader": "^6.2.0",
     "html-webpack-plugin": "^5.6.0",
     "sass-loader": "^13.3.3",
