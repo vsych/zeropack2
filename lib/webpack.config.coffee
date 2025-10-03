@@ -19,9 +19,7 @@ style = loader: 'style-loader'
 
 css = loader: 'css-loader'
 
-sass =
-  loader: 'sass-loader'
-  options: implementation: 'node-sass'
+sass = loader: 'sass-loader'
 
 thread = loader: 'thread-loader'
 
@@ -59,7 +57,7 @@ module.exports = (builderCmd, builderEnv, builderDir) ->
       {
         test: /\.scss$/
         use: [
-          thread
+          #thread
           style
           css
           sass
@@ -68,7 +66,7 @@ module.exports = (builderCmd, builderEnv, builderDir) ->
       {
         test: /\.css$/
         use: [
-          thread
+          #thread
           style
           css
         ]
@@ -76,7 +74,7 @@ module.exports = (builderCmd, builderEnv, builderDir) ->
       {
         test: /\.(coffee|cjsx)$/
         use: [
-          thread
+          #thread
           babel
           { loader: 'coffee-loader' }
         ]
@@ -85,7 +83,7 @@ module.exports = (builderCmd, builderEnv, builderDir) ->
         test: /\.?js$/
         exclude: /node_modules/
         use: [
-          thread
+          #thread
           babel
         ]
       }
