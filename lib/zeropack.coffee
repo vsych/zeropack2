@@ -37,6 +37,7 @@ switch builderCmd
     # Get the build output path from config
     buildPath = config.output.path
     port = process.env.PORT || 3000
+    host = process.env.HOST || 'localhost'
 
     app = Express()
 
@@ -47,6 +48,6 @@ switch builderCmd
     app.get '*', (req, res) ->
       res.sendFile Path.join(buildPath, 'index.html')
 
-    app.listen port, ->
-      console.log yellowText "Server running at http://localhost:#{port}"
+    app.listen port, host, ->
+      console.log yellowText "Server running at http://#{host}:#{port}"
       console.log yellowText "Serving static files from: #{buildPath}"
