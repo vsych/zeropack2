@@ -1,3 +1,4 @@
+require('dotenv').config();
 Webpack = require 'webpack'
 WebpackDevServer = require 'webpack-dev-server'
 Config = require './webpack.config.coffee'
@@ -45,7 +46,7 @@ switch builderCmd
     app.use Express.static(buildPath)
 
     # Handle client-side routing by serving index.html for all routes
-    app.get '*', (req, res) ->
+    app.get '/*any', (req, res) ->
       res.sendFile Path.join(buildPath, 'index.html')
 
     app.listen port, host, ->

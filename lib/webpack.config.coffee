@@ -2,6 +2,8 @@ path                = require 'path'
 HtmlWebpackPlugin   = require 'html-webpack-plugin'
 TerserPlugin        = require 'terser-webpack-plugin'
 Webpack             = require 'webpack'
+ConfigPlugin        = require './ConfigPlugin.js'
+
 
 babel =
   loader: 'babel-loader'
@@ -104,9 +106,11 @@ module.exports = (builderCmd, builderEnv, builderDir) ->
   plugins: [
     new HtmlWebpackPlugin(
       template: path.join(prjPath, 'src', 'index.html')
-      templateParameters: ENV: require(envPath)
+      templateParameters: ENV: APP_ENV: 'production' #TODO: remove after migration to config.js
     ),
-    new Webpack.ProvidePlugin(ENV: envPath)
+    new ConfigPlugin({
+      envVars: builderConfig.envVars
+    })
   ]
   optimization:
     minimize: mode == 'production'
