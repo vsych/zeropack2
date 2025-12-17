@@ -21,10 +21,6 @@ style = loader: 'style-loader'
 
 css = loader: 'css-loader'
 
-sass =
-  loader: 'sass-loader'
-  options: implementation: 'sass'
-
 thread = loader: 'thread-loader'
 
 file = loader: 'file-loader'
@@ -37,6 +33,10 @@ module.exports = (builderCmd, builderEnv, builderDir) ->
   envPath = path.join(prjPath, ".app.data.#{builderEnv}.json")
 
   builderConfig = require path.join(prjPath, 'zeropack.config.coffee')
+
+  sass =
+    loader: 'sass-loader'
+    options: implementation: builderConfig.sassImplementation || 'node-sass'
 
   mode: mode
   entry: builderConfig.entry
