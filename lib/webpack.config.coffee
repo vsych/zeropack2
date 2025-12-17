@@ -23,7 +23,7 @@ css = loader: 'css-loader'
 
 sass =
   loader: 'sass-loader'
-  options: implementation: 'node-sass'
+  options: implementation: 'sass'
 
 thread = loader: 'thread-loader'
 
