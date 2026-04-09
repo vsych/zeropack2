@@ -3,18 +3,34 @@ HtmlWebpackPlugin   = require 'html-webpack-plugin'
 TerserPlugin        = require 'terser-webpack-plugin'
 Webpack             = require 'webpack'
 ConfigPlugin        = require './ConfigPlugin.js'
+coffeescript        = require 'coffeescript'
 
+# Built-in CoffeeScript-in-Svelte preprocessor
+is_coffee_fragment = (input) ->
+  input.attributes?.type == 'coffee' || input.attributes?.lang == 'coffee'
+
+sveltePreprocess =
+  script: (input) ->
+    unless is_coffee_fragment input
+      return code: input.content
+    content = input.content
+      .replace /(\$[a-z0-9$]{1,})\s+=/ig, '((v) -> `$1 = v`)'
+      .replace /\$\:/g, '$_'
+    code = coffeescript.compile content,
+      bare: true
+      filename: input.filename
+    code: code.replace /\$_/g, '$:'
 
 babel =
   loader: 'babel-loader'
   options:
     presets: [
-      '@babel/preset-env'
-      '@babel/preset-react'
+      require.resolve('@babel/preset-env')
+      require.resolve('@babel/preset-react')
     ]
     plugins: [
-      'add-module-exports'
-      '@babel/plugin-transform-modules-commonjs'
+      require.resolve('babel-plugin-add-module-exports')
+      require.resolve('@babel/plugin-transform-modules-commonjs')
     ]
 
 style = loader: 'style-loader'
@@ -38,11 +54,31 @@ module.exports = (builderCmd, builderEnv, builderDir) ->
 
   builderConfig = require path.join(prjPath, 'zeropack.config.coffee')
 
+  # Svelte support — enabled when builderConfig.svelte is set
+  svelteRule = if builderConfig.svelte
+    svelteOpts = Object.assign {dev: mode == 'development', preprocess: sveltePreprocess}, builderConfig.svelte
+    [{test: /\.svelte$/, use: {loader: 'svelte-loader', options: svelteOpts}}]
+  else []
+
+  # Extensions — auto-add svelte-related when svelte is enabled
+  defaultExtensions = ['.coffee', '.js', '.cjsx']
+  if builderConfig.svelte
+    defaultExtensions = ['.mjs', '.js', '.svelte', '.coffee']
+  extensions = builderConfig.extensions || defaultExtensions
+
+  # Main fields — auto-add 'svelte' when svelte is enabled
+  defaultMainFields = ['browser', 'module', 'main']
+  if builderConfig.svelte
+    defaultMainFields = ['svelte', 'browser', 'module', 'main']
+  mainFields = builderConfig.mainFields || defaultMainFields
+
   mode: mode
+  target: builderConfig.target
+  devtool: builderConfig.devtool
   entry: builderConfig.entry
   output:
     path: builderConfig.outputPath
-    filename: '[fullhash].[name].bundle.js'
+    filename: builderConfig.outputFilename || '[fullhash].[name].bundle.js'
     chunkFilename: '[fullhash].[name].[id].chunk.js'
     clean: true
     publicPath: builderConfig.publicPath || '/'
@@ -58,6 +94,8 @@ module.exports = (builderCmd, builderEnv, builderDir) ->
   }
   module:
     rules: [
+      ...svelteRule
+      ...(builderConfig.extraRules || [])
       {
         test: /\.scss$/
         use: [
@@ -96,22 +134,27 @@ module.exports = (builderCmd, builderEnv, builderDir) ->
         type: 'asset/resource'
       }
     ]
+  resolveLoader:
+    modules: [
+      path.join(__dirname, '..', 'node_modules')
+      'node_modules'
+    ]
   resolve:
     alias: builderConfig.alias
-    extensions: [
-      '.coffee'
-      '.js'
-      '.cjsx'
-    ]
+    extensions: extensions
+    mainFields: mainFields
   plugins: [
     new HtmlWebpackPlugin(
-      template: path.join(prjPath, 'src', 'index.html')
+      template: builderConfig.htmlTemplate || path.join(prjPath, 'src', 'index.html')
       templateParameters: ENV: APP_ENV: 'production' #TODO: remove after migration to config.js
     ),
     new ConfigPlugin({
       envVars: builderConfig.envVars
     })
-  ]
+    new Webpack.DefinePlugin(Object.assign({'process.env.NODE_ENV': JSON.stringify(mode)}, builderConfig.defines))
+    new Webpack.NoEmitOnErrorsPlugin
+    ...(builderConfig.extraPlugins || [])
+  ].filter(Boolean)
   optimization:
     minimize: mode == 'production'
     minimizer: [ new TerserPlugin ]

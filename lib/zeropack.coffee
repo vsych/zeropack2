@@ -5,9 +5,9 @@ Config = require './webpack.config.coffee'
 Express = require 'express'
 Path = require 'path'
 
-yellowText = (text) -> "\u001b[33m#{text}\u001b[0m"
+greenText = (text) -> "\u001b[32m#{text}\u001b[0m"
 
-console.log yellowText "ZeroPack v#{require("../package.json").version}"
+console.log greenText "ZeroPack v#{require("../package.json").version}"
 
 builderCmd = process.argv[2]
 builderEnv = process.env['BUILDER_ENV'] || 'development'
@@ -50,5 +50,5 @@ switch builderCmd
       res.sendFile Path.join(buildPath, 'index.html')
 
     app.listen port, host, ->
-      console.log yellowText "Server running at http://#{host}:#{port}"
-      console.log yellowText "Serving static files from: #{buildPath}"
+      console.log greenText "Server running at http://#{host}:#{port}"
+      console.log greenText "Serving static files from: #{buildPath}"
