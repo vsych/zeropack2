@@ -1,13 +1,13 @@
 {
   "name": "zeropack2",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "",
   "main": "bin/zeropack",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "directories": {
-    "bin": "./bin"
+  "bin": {
+    "zeropack": "./bin/zeropack"
   },
   "author": "",
   "license": "ISC",
