@@ -37,10 +37,6 @@ style = loader: 'style-loader'
 
 css = loader: 'css-loader'
 
-sass =
-  loader: 'sass-loader'
-  options: implementation: 'node-sass'
-
 thread = loader: 'thread-loader'
 
 file = loader: 'file-loader'
@@ -53,6 +49,12 @@ module.exports = (builderCmd, builderEnv, builderDir) ->
   envPath = path.join(prjPath, ".app.data.#{builderEnv}.json")
 
   builderConfig = require path.join(prjPath, 'zeropack.config.coffee')
+
+  sass =
+    loader: 'sass-loader'
+    options:
+      implementation: builderConfig.sassImplementation || 'node-sass'
+      sassOptions: builderConfig.sassOptions || {}
 
   # Svelte support — enabled when builderConfig.svelte is set
   svelteRule = if builderConfig.svelte
