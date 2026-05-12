@@ -21,14 +21,14 @@ sveltePreprocess =
       filename: input.filename
     code: code.replace /\$_/g, '$:'
 
-makeBabel = (typescript = false) ->
+makeBabel = (typescript = false, prjPath = '') ->
   presets = [
     require.resolve('@babel/preset-env')
     require.resolve('@babel/preset-react')
   ]
   if typescript
     try
-      presets.push require.resolve('@babel/preset-typescript')
+      presets.push require.resolve('@babel/preset-typescript', { paths: [prjPath] })
     catch
       console.warn 'zeropack2: typescript enabled but @babel/preset-typescript not found. Install it: npm i -D @babel/preset-typescript'
 
@@ -65,7 +65,7 @@ module.exports = (builderCmd, builderEnv, builderDir) ->
 
   # TypeScript support — enabled when builderConfig.typescript is truthy
   useTypescript = !!builderConfig.typescript
-  babel = makeBabel(useTypescript)
+  babel = makeBabel(useTypescript, prjPath)
 
   tsRule = if useTypescript
     [{test: /\.tsx?$/, exclude: /node_modules/, use: [thread, babel]}]
