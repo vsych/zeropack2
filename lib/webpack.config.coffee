@@ -21,13 +21,20 @@ sveltePreprocess =
       filename: input.filename
     code: code.replace /\$_/g, '$:'
 
-babel =
+makeBabel = (typescript = false) ->
+  presets = [
+    require.resolve('@babel/preset-env')
+    require.resolve('@babel/preset-react')
+  ]
+  if typescript
+    try
+      presets.push require.resolve('@babel/preset-typescript')
+    catch
+      console.warn 'zeropack2: typescript enabled but @babel/preset-typescript not found. Install it: npm i -D @babel/preset-typescript'
+
   loader: 'babel-loader'
   options:
-    presets: [
-      require.resolve('@babel/preset-env')
-      require.resolve('@babel/preset-react')
-    ]
+    presets: presets
     plugins: [
       require.resolve('babel-plugin-add-module-exports')
       require.resolve('@babel/plugin-transform-modules-commonjs')
@@ -56,16 +63,26 @@ module.exports = (builderCmd, builderEnv, builderDir) ->
       implementation: builderConfig.sassImplementation || 'node-sass'
       sassOptions: builderConfig.sassOptions || {}
 
+  # TypeScript support — enabled when builderConfig.typescript is truthy
+  useTypescript = !!builderConfig.typescript
+  babel = makeBabel(useTypescript)
+
+  tsRule = if useTypescript
+    [{test: /\.tsx?$/, exclude: /node_modules/, use: [thread, babel]}]
+  else []
+
   # Svelte support — enabled when builderConfig.svelte is set
   svelteRule = if builderConfig.svelte
     svelteOpts = Object.assign {dev: mode == 'development', preprocess: sveltePreprocess}, builderConfig.svelte
     [{test: /\.svelte$/, use: {loader: 'svelte-loader', options: svelteOpts}}]
   else []
 
-  # Extensions — auto-add svelte-related when svelte is enabled
+  # Extensions — auto-add based on enabled features
   defaultExtensions = ['.coffee', '.js', '.cjsx']
   if builderConfig.svelte
     defaultExtensions = ['.mjs', '.js', '.svelte', '.coffee']
+  if useTypescript
+    defaultExtensions = defaultExtensions.concat ['.ts', '.tsx']
   extensions = builderConfig.extensions || defaultExtensions
 
   # Main fields — auto-add 'svelte' when svelte is enabled
@@ -97,6 +114,7 @@ module.exports = (builderCmd, builderEnv, builderDir) ->
   module:
     rules: [
       ...svelteRule
+      ...tsRule
       ...(builderConfig.extraRules || [])
       {
         test: /\.scss$/
