@@ -4,22 +4,34 @@ TerserPlugin        = require 'terser-webpack-plugin'
 Webpack             = require 'webpack'
 ConfigPlugin        = require './ConfigPlugin.js'
 coffeescript        = require 'coffeescript'
+babelCore           = require '@babel/core'
 
 # Built-in CoffeeScript-in-Svelte preprocessor
 is_coffee_fragment = (input) ->
   input.attributes?.type == 'coffee' || input.attributes?.lang == 'coffee'
 
+is_typescript_fragment = (input) ->
+  input.attributes?.type in ['typescript', 'ts'] ||
+    input.attributes?.lang in ['typescript', 'ts']
+
 sveltePreprocess =
   script: (input) ->
-    unless is_coffee_fragment input
-      return code: input.content
-    content = input.content
-      .replace /(\$[a-z0-9$]{1,})\s+=/ig, '((v) -> `$1 = v`)'
-      .replace /\$\:/g, '$_'
-    code = coffeescript.compile content,
-      bare: true
-      filename: input.filename
-    code: code.replace /\$_/g, '$:'
+    if is_coffee_fragment input
+      content = input.content
+        .replace /(\$[a-z0-9$]{1,})\s+=/ig, '((v) -> `$1 = v`)'
+        .replace /\$\:/g, '$_'
+      code = coffeescript.compile content,
+        bare: true
+        filename: input.filename
+      return code: code.replace /\$_/g, '$:'
+    if is_typescript_fragment input
+      result = babelCore.transformSync input.content,
+        filename: "#{input.filename || 'inline'}.ts"
+        babelrc: false
+        configFile: false
+        presets: [require.resolve('@babel/preset-typescript')]
+      return code: result.code
+    code: input.content
 
 babel =
   loader: 'babel-loader'
@@ -27,6 +39,19 @@ babel =
     presets: [
       require.resolve('@babel/preset-env')
       require.resolve('@babel/preset-react')
+    ]
+    plugins: [
+      require.resolve('babel-plugin-add-module-exports')
+      require.resolve('@babel/plugin-transform-modules-commonjs')
+    ]
+
+babelTS =
+  loader: 'babel-loader'
+  options:
+    presets: [
+      require.resolve('@babel/preset-env')
+      require.resolve('@babel/preset-react')
+      [require.resolve('@babel/preset-typescript'), allExtensions: true, isTSX: true]
     ]
     plugins: [
       require.resolve('babel-plugin-add-module-exports')
@@ -63,9 +88,9 @@ module.exports = (builderCmd, builderEnv, builderDir) ->
   else []
 
   # Extensions — auto-add svelte-related when svelte is enabled
-  defaultExtensions = ['.coffee', '.js', '.cjsx']
+  defaultExtensions = ['.coffee', '.ts', '.tsx', '.js', '.cjsx']
   if builderConfig.svelte
-    defaultExtensions = ['.mjs', '.js', '.svelte', '.coffee']
+    defaultExtensions = ['.mjs', '.js', '.ts', '.tsx', '.svelte', '.coffee']
   extensions = builderConfig.extensions || defaultExtensions
 
   # Main fields — auto-add 'svelte' when svelte is enabled
@@ -121,6 +146,14 @@ module.exports = (builderCmd, builderEnv, builderDir) ->
           thread
           babel
           { loader: 'coffee-loader' }
+        ]
+      }
+      {
+        test: /\.(ts|tsx)$/
+        exclude: /node_modules/
+        use: [
+          thread
+          babelTS
         ]
       }
       {
