@@ -21,16 +21,15 @@ sveltePreprocess =
       filename: input.filename
     code: code.replace /\$_/g, '$:'
 
-makeBabel = (typescript = false, prjPath = '') ->
+makeBabel = (prjPath = '') ->
   presets = [
     require.resolve('@babel/preset-env')
     require.resolve('@babel/preset-react')
   ]
-  if typescript
-    try
-      presets.push require.resolve('@babel/preset-typescript', { paths: [prjPath] })
-    catch
-      console.warn 'zeropack2: typescript enabled but @babel/preset-typescript not found. Install it: npm i -D @babel/preset-typescript'
+  try
+    presets.push require.resolve('@babel/preset-typescript', { paths: [prjPath] })
+  catch
+    # @babel/preset-typescript is optional — .ts/.tsx files won't compile without it
 
   loader: 'babel-loader'
   options:
@@ -63,13 +62,9 @@ module.exports = (builderCmd, builderEnv, builderDir) ->
       implementation: builderConfig.sassImplementation || 'node-sass'
       sassOptions: builderConfig.sassOptions || {}
 
-  # TypeScript support — enabled when builderConfig.typescript is truthy
-  useTypescript = !!builderConfig.typescript
-  babel = makeBabel(useTypescript, prjPath)
+  babel = makeBabel(prjPath)
 
-  tsRule = if useTypescript
-    [{test: /\.tsx?$/, exclude: /node_modules/, use: [thread, babel]}]
-  else []
+  tsRule = [{test: /\.tsx?$/, exclude: /node_modules/, use: [thread, babel]}]
 
   # Svelte support — enabled when builderConfig.svelte is set
   svelteRule = if builderConfig.svelte
@@ -78,11 +73,9 @@ module.exports = (builderCmd, builderEnv, builderDir) ->
   else []
 
   # Extensions — auto-add based on enabled features
-  defaultExtensions = ['.coffee', '.js', '.cjsx']
+  defaultExtensions = ['.coffee', '.js', '.cjsx', '.ts', '.tsx']
   if builderConfig.svelte
-    defaultExtensions = ['.mjs', '.js', '.svelte', '.coffee']
-  if useTypescript
-    defaultExtensions = defaultExtensions.concat ['.ts', '.tsx']
+    defaultExtensions = ['.mjs', '.js', '.svelte', '.coffee', '.ts', '.tsx']
   extensions = builderConfig.extensions || defaultExtensions
 
   # Main fields — auto-add 'svelte' when svelte is enabled
